@@ -35,7 +35,6 @@ const userTimeStamp = {};
 io.on("connection", (socket) => {
   socket.on("send request to stall", (payload) => {
     try {
-      // console.log(stallId?.[payload.stall]);
       userWantToConnect[payload.user] = payload.stall;
       if (!requestList[payload.stall]) {
         requestList[payload.stall] = [];
@@ -65,7 +64,6 @@ io.on("connection", (socket) => {
   //for stall
   socket.on("requested list", (payload) => {
     try {
-      // console.log(payload);
       stallId[payload.stall] = socket.id;
       stallSoIdToId[socket.id] = payload.stall;
       if (requestList?.[payload?.stall]) {
@@ -90,7 +88,6 @@ io.on("connection", (socket) => {
       stallToConnect[stall] = userToSignal;
       userToConnect[userToSignal] = stall;
       const userSocketId = await userId?.[userToSignal];
-      // console.log(userSocketId);
       io.to(userSocketId).emit("signal to user", {
         callerID,
         signal,
@@ -104,7 +101,6 @@ io.on("connection", (socket) => {
     try {
       const { signal, stall } = payload;
       const stallSocketId = await stallId?.[stall];
-      // console.log(stallSocketId);
       io.to(stallSocketId).emit("send signal to stall", { signal });
     } catch (error) {
       new Error(error);
@@ -194,7 +190,6 @@ io.on("connection", (socket) => {
           delete userId[selfId];
           delete userToConnect[selfId];
           delete stallToConnect[userToConnect[selfId]];
-          // console.log(tempStallId);
           io.to(tempStallId).emit("Disconnect call", {
             haveData,
             userUuid: selfId,
@@ -205,7 +200,6 @@ io.on("connection", (socket) => {
           delete userWantToConnect[selfId];
           socket.emit("you are disconnected", "self disconnected");
         }
-        // console.log("discconnect");
         socket.emit("you are disconnected", "self disconnected");
       }
     } catch (error) {
@@ -217,7 +211,6 @@ io.on("connection", (socket) => {
       const { selfId, stall } = payload;
       delete userId[selfId];
       delete userSoIdToId[socket.id];
-      // console.log(userWantToConnect[selfId]);
 
       if (userWantToConnect[selfId]) {
         const exitUser = requestList[userWantToConnect[selfId]].filter(
@@ -225,7 +218,6 @@ io.on("connection", (socket) => {
         );
         requestList[userWantToConnect[selfId]] = exitUser;
         delete userWantToConnect[selfId];
-        // console.log("d", stallId[stall]);
         io.to(stallId[stall]).emit("remove user", { newRequestList: exitUser });
       }
 
@@ -277,7 +269,6 @@ io.on("connection", (socket) => {
     try {
       //stall disconnected
       if (stallSoIdToId[socket.id]) {
-        // console.log("This the stall");
         delete stallId[stallSoIdToId[socket.id]];
         // stallToConnect[stallSoIdToId[socket.id]] = userToSignal;
         if (stallToConnect[stallSoIdToId[socket.id]]) {
@@ -300,7 +291,6 @@ io.on("connection", (socket) => {
           ]?.filter((id) => id !== userSoIdToId[socket.id]);
           requestList[userToConnect[userSoIdToId[socket.id]]] = withdrawUser;
           //request lit remove end
-          // console.log(stallId[userToConnect[userSoIdToId[socket.id]]]);
           io.to(stallId[userToConnect[userSoIdToId[socket.id]]]).emit(
             "User is disconnected",
             "data"
@@ -311,7 +301,6 @@ io.on("connection", (socket) => {
           delete userSoIdToId[socket.id];
         } else {
           delete userId[userSoIdToId[socket.id]];
-          // console.log(userWantToConnect[userSoIdToId[socket.id]]);
           if (userWantToConnect[userSoIdToId[socket.id]]) {
             const exitRequest = requestList[
               userWantToConnect?.[userSoIdToId?.[socket.id]]
@@ -391,8 +380,8 @@ io.of("/group").on("connection", (socket, next) => {
   socket.on("member_send_signal", (payload) => {
     try {
       const { signal, sendToSoId, selfUid, type, eventUid, name } = payload;
+      const data = eventData[eventUid]?.find((data) => data.uid === selfUid);
       if (type === "member") {
-        const data = eventData[eventUid]?.find((data) => data.uid === selfUid);
         socket.to(sendToSoId).emit("creat_peer_send_to_member", {
           signal,
           createPeerSenderUid: selfUid,
@@ -407,6 +396,8 @@ io.of("/group").on("connection", (socket, next) => {
           createPeerSenderUid: selfUid,
           peerSenderName: name,
           eventUid,
+          audio: data.audio,
+          video: data.video,
         });
       }
     } catch (error) {
@@ -1052,7 +1043,6 @@ const groupChatIdToUid = {};
 io.of("/groupChat").on("connection", (socket, next) => {
   socket.on("new_user_Join", (payload) => {
     const { uid } = payload;
-    // console.log(uid);
     if (groupChatUIDToId[uid]) {
       delete groupChatIdToUid[groupChatUIDToId[uid]];
       delete groupChatUIDToId[uid];
@@ -1062,8 +1052,6 @@ io.of("/groupChat").on("connection", (socket, next) => {
       groupChatUIDToId[uid] = socket.id;
       groupChatIdToUid[socket.id] = uid;
     }
-    // console.log(groupChatUIDToId[uid]);
-    // console.log(groupChatIdToUid[socket.id]);
   });
   socket.on("send_message", (payload) => {
     const {
