@@ -410,11 +410,24 @@ io.of("/group").on("connection", (socket, next) => {
     try {
       const { signal, sendTo, selfUid, eventUid, name } = payload;
       const findData = eventData?.[eventUid]?.find((id) => id.uid === sendTo);
+      const addPeerSenderDetails = eventData?.[eventUid]?.find(
+        (id) => id.uid === selfUid
+      );
+      const str = {
+        audio: true,
+        video: true,
+      };
+      if (addPeerSenderDetails?.type === "member") {
+        (str.audio = addPeerSenderDetails?.audio),
+          (str.video = addPeerSenderDetails?.video);
+      }
       socket.to(findData?.soId).emit("set_for_remote_description", {
         signal,
         addPeerSenderUid: selfUid,
         name,
         soId: socket.id,
+        audio: str.audio,
+        video: str.video,
       });
     } catch (error) {
       new Error(error);
