@@ -925,11 +925,14 @@ io.of("/network").on("connection", (socket, next) => {
   });
   socket.on("Signal_return_from_host", (payload, next) => {
     try {
-      const { signal, senderUid, senderId, name } = payload;
+      const { signal, senderUid, senderId, name, tableNo } = payload;
+      const userData = tableRoom[tableNo]?.find((id) => id.uid === senderUid);
       socket.to(senderId).emit("returned_signal_to_user", {
         signal,
         senderUid,
         name,
+        audio: userData?.audio,
+        video: userData?.video,
       });
     } catch (error) {
       new Error(error);
@@ -954,10 +957,13 @@ io.of("/network").on("connection", (socket, next) => {
   //signal come from user after addPeer
   socket.on("Signal_goes_to_user", (payload, next) => {
     try {
-      const { signal, senderUid, senderId } = payload;
+      const { signal, senderUid, senderId, tableNo } = payload;
+      const userData = tableRoom?.[tableNo]?.find((id) => id.uid === senderUid);
       socket.to(senderId).emit("returned_signal_to_user", {
         signal,
         senderUid,
+        audio: userData?.audio,
+        video: userData?.video,
       });
     } catch (error) {
       new Error(error);
